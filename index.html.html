@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Vault - Web Prototype</title>
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --md-primary: #6750A4;
+            --md-on-primary: #FFFFFF;
+            --md-primary-container: #EADDFF;
+            --md-on-primary-container: #21005D;
+            --md-surface: #FEF7FF;
+            --md-on-surface: #1D1B20;
+            --md-surface-variant: #E7E0EC;
+            --md-on-surface-variant: #49454F;
+            --md-outline: #79747E;
+            --background: #F4F5FA;
+            --card-bg: #FFFFFF;
+        }
+
+        [data-theme="dark"] {
+            --md-primary: #D0BCFF;
+            --md-on-primary: #381E72;
+            --md-primary-container: #4F378B;
+            --md-on-primary-container: #EADDFF;
+            --md-surface: #141218;
+            --md-on-surface: #E6E1E5;
+            --md-surface-variant: #49454F;
+            --md-on-surface-variant: #CAC4D0;
+            --background: #0F0E13;
+            --card-bg: #1D1B20;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--md-on-surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Phone Wrapper Chassis */
+        .phone-container {
+            width: 100%;
+            max-width: 410px;
+            height: 840px;
+            background-color: var(--md-surface);
+            border-radius: 32px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #222;
+        }
+
+        /* Top Header */
+        .app-bar {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--md-surface);
+            border-bottom: 1px solid var(--md-surface-variant);
+        }
+
+        .app-bar h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--md-on-surface);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .icon-btn:hover {
+            background-color: var(--md-surface-variant);
+        }
+
+        /* Content Area */
+        .content-frame {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* MD3 Storage Card */
+        .storage-card {
+            background-color: var(--md-surface-variant);
+            color: var(--md-on-surface-variant);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+
+        .storage-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        [data-theme="dark"] .progress-bar {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 65%;
+            background-color: var(--md-primary);
+            border-radius: 4px;
+        }
+
+        /* Grid Layout */
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .category-card {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--md-surface-variant);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .category-card .material-icons-round {
+            color: var(--md-primary);
+            font-size: 28px;
+        }
+
+        /* Interactive File Sorter Tool */
+        .tool-box {
+            background-color: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+            padding: 16px;
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+
+        .tool-box h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--md-outline);
+            margin-bottom: 10px;
+            background: var(--card-bg);
+            color: var(--md-on-surface);
+        }
+
+        .btn {
+            background-color: var(--md-primary);
+            color: var(--md-on-primary);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        /* Log / Recent Area */
+        .recent-section {
+            margin-top: 24px;
+        }
+
+        .recent-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--md-surface-variant);
+        }
+
+        .file-icon {
+            color: var(--md-primary);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .file-path {
+            font-size: 11px;
+            color: var(--md-outline);
+        }
+
+        /* Secure Vault Screen CSS */
+        .vault-auth {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .pin-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--md-primary);
+            border-radius: 50%;
+        }
+
+        .pin-dot.active {
+            background-color: var(--md-primary);
+        }
+
+        .keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+
+        .key {
+            background-color: var(--md-surface-variant);
+            color: var(--md-on-surface);
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50%;
+            cursor: pointer;
+            aspect-ratio: 1;
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background-color: var(--md-surface);
+            border-top: 1px solid var(--md-surface-variant);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--md-on-surface-variant);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .nav-item .material-icons-round {
+            padding: 4px 16px;
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--md-primary);
+            font-weight: 600;
+        }
+
+        .nav-item.active .material-icons-round {
+            background-color: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- App Top Bar -->
+        <div class="app-bar">
+            <h1 id="app-bar-title">Smart Vault</h1>
+            <button class="icon-btn" onclick="toggleTheme()">
+                <span class="material-icons-round" id="theme-icon">dark_mode</span>
+            </button>
+        </div>
+
+        <!-- Dynamic Screen Content Frame -->
+        <div class="content-frame">
+            
+            <!-- SCREEN 1: HOME DASHBOARD -->
+            <div id="screen-home" class="screen active">
+                <div class="storage-card">
+                    <div class="storage-title">Storage Analysis</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div style="font-size: 12px;">41.6 GB used of 64 GB</div>
+                </div>
+
+                <div class="grid-2x2">
+                    <div class="category-card" onclick="switchTab('photos')">
+                        <span class="material-icons-round">image</span>
+                        <div><strong>Photos</strong></div>
+                        <div style="font-size:12px; color:var(--md-outline)" id="count-photo">12 Files</div>
+                    </div>
+                    <div class="category-card" onclick="switchTab('docs')">
+                        <span class="material-icons-round">description</span>
+                        <div><strong>Documents</strong></div>
+                        <div style="font-size:12px; color:var(--md-outline)" id="count-pdf">4 Files</div>
+                    </div>
+                </div>
+
+                <!-- Live Auto-Sorting Simulator Logic -->
+                <div class="tool-box">
+                    <h3>⚡ Auto-Sort Simulator</h3>
+                    <p style="font-size: 12px; margin-bottom: 10px;">फाइल टाइप सेलेक्ट करें और देखें कि ऐप उसे बैकग्राउंड में कैसे ऑटो-सॉर्ट करता है:</p>
+                    <select class="select-input" id="sim-file-type">
+                        <option value="screenshot_study.png">Screenshot (screenshot_study.png)</option>
+                        <option value="syllabus_cgl.pdf">Exam Document (syllabus_cgl.pdf)</option>
+                        <option value="dhoni_six.mp4">Match Video (dhoni_six.mp4)</option>
+                        <option value="lecture_audio.mp3">Audio Note (lecture_audio.mp3)</option>
+                    </select>
+                    <button class="btn" onclick="simulateIncomingFile()">Process Smart File</button>
+                </div>
+
+                <div class="recent-section">
+                    <div class="recent-title">Recent Event Log</div>
+                    <div id="recent-files-list">
+                        <!-- Simulated Files Append Dynamically Here -->
+                        <div class="file-row">
+                            <span class="material-icons-round file-icon">star</span>
+                            <div class="file-info">
+                                <div class="file-name">App initialized successfully</div>
+                                <div class="file-path">System Secure Sandbox Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: PHOTOS DRAWER -->
+            <div id="screen-photos" class="screen">
+                <div class="recent-title">Photos & Screenshots Folder</div>
+                <p style="font-size: 13px; color: var(--md-outline); margin-bottom: 12px;">All image binaries dynamically managed under Scoped Storage:</p>
+                <div id="photos-list"></div>
+            </div>
+
+            <!-- SCREEN 3: DOCUMENTS DRAWER -->
+            <div id="screen-docs" class="screen">
+                <div class="recent-title">Documents Archive (PDFs)</div>
+                <p style="font-size: 13px; color: var(--md-outline); margin-bottom: 12px;">Secure localized documents vault directory:</p>
+                <div id="docs-list"></div>
+            </div>
+
+            <!-- SCREEN 4: PRIVATE VAULT (PIN ENCRYPTED) -->
+            <div id="screen-vault" class="screen">
+                <!-- Lock Screen Screen Box -->
+                <div id="vault-lock-view" class="vault-auth">
+                    <span class="material-icons-round" style="font-size: 48px; color: var(--md-primary);">lock</span>
+                    <h3 style="margin-top:10px;">Enter Vault PIN</h3>
+                    <p style="font-size:12px; color: var(--md-outline)">Default Secure Prototype Master PIN is <b>1234</b></p>
+                    
+                    <div class="pin-input-container">
+                        <div class="pin-dot" id="dot-0"></div>
+                        <div class="pin-dot" id="dot-1"></div>
+                        <div class="pin-dot" id="dot-2"></div>
+                        <div class="pin-dot" id="dot-3"></div>
+                    </div>
+
+                    <div class="keyboard-grid">
+                        <button class="key" onclick="pressKey('1')">1</button>
+                        <button class="key" onclick="pressKey('2')">2</button>
+                        <button class="key" onclick="pressKey('3')">3</button>
+                        <button class="key" onclick="pressKey('4')">4</button>
+                        <button class="key" onclick="pressKey('5')">5</button>
+                        <button class="key" onclick="pressKey('6')">6</button>
+                        <button class="key" onclick="pressKey('7')">7</button>
+                        <button class="key" onclick="pressKey('8')">8</button>
+                        <button class="key" onclick="pressKey('9')">9</button>
+                        <button class="key" style="background:transparent"></button>
+                        <button class="key" onclick="pressKey('0')">0</button>
+                        <button class="key" onclick="clearPin()"><span class="material-icons-round">backspace</span></button>
+                    </div>
+                </div>
+
+                <!-- Unlocked View Panel -->
+                <div id="vault-unlocked-view" style="display: none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <div class="recent-title" style="margin:0; color:#4CAF50;">🔓 AES-256 Encrypted Storage Area</div>
+                        <button class="btn" style="width:auto; padding:6px 12px; font-size:12px;" onclick="lockVault()">Lock</button>
+                    </div>
+                    <p style="font-size: 13px; color:var(--md-outline); margin-bottom:16px;">These elements are system runtime encrypted inside the keystore wrapper structure.</p>
+                    <div class="file-row">
+                        <span class="material-icons-round" style="color:#4CAF50;">gpp_good</span>
+                        <div class="file-info">
+                            <div class="file-name">personal_aadhaar_card.pdf.enc</div>
+                            <div class="file-path">/Vault/SecureDocuments/</div>
+                        </div>
+                    </div>
+                    <div class="file-row">
+                        <span class="material-icons-round" style="color:#4CAF50;">enhanced_encryption</span>
+                        <div class="file-info">
+                            <div class="file-name">bank_passbook_scan.jpg.enc</div>
+                            <div class="file-path">/Vault/SecurePhotos/</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Persistent Bottom MD3 Navigation Structure Bar -->
+        <div class="bottom-nav">
+            <button class="nav-item active" id="btn-nav-home" onclick="switchTab('home')">
+                <span class="material-icons-round">home</span>Home
+            </button>
+            <button class="nav-item" id="btn-nav-photos" onclick="switchTab('photos')">
+                <span class="material-icons-round">image</span>Photos
+            </button>
+            <button class="nav-item" id="btn-nav-docs" onclick="switchTab('docs')">
+                <span class="material-icons-round">description</span>Docs
+            </button>
+            <button class="nav-item" id="btn-nav-vault" onclick="switchTab('vault')">
+                <span class="material-icons-round">gpp_maybe</span>Vault
+            </button>
+        </div>
+    </div>
+
+    <!-- UI Core Automation Simulation Script Engineering Engine -->
+    <script>
+        // Database arrays representing the app state state storage pools
+        let simulatedFiles = [
+            { name: "screenshot_20260712.png", path: "/Pictures/Screenshots/", type: "photo" },
+            { name: "history_notes_chola.pdf", path: "/Documents/PDFs/", type: "pdf" },
+            { name: "ssc_cgl_syllabus.pdf", path: "/Documents/PDFs/", type: "pdf" },
+            { name: "family_pic.jpg", path: "/Pictures/Photos/", type: "photo" }
+        ];
+
+        let enteredPin = "";
+
+        // Component Initialization Trigger
+        function updateUIVisuals() {
+            const photoContainer = document.getElementById("photos-list");
+            const docContainer = document.getElementById("docs-list");
+            
+            photoContainer.innerHTML = "";
+            docContainer.innerHTML = "";
+
+            let photoCount = 0;
+            let pdfCount = 0;
+
+            simulatedFiles.forEach(file => {
+                const row = document.createElement("div");
+                row.className = "file-row";
+                row.innerHTML = `
+                    <span class="material-icons-round file-icon">${file.type === 'photo' ? 'image' : 'picture_as_pdf'}</span>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-path">${file.path}</div>
+                    </div>
+                `;
+
+                if (file.type === 'photo') {
+                    photoContainer.appendChild(row);
+                    photoCount++;
+                } else if (file.type === 'pdf') {
+                    docContainer.appendChild(row);
+                    pdfCount++;
+                }
+            });
+
+            document.getElementById("count-photo").innerText = `${photoCount} Files`;
+            document.getElementById("count-pdf").innerText = `${pdfCount} Files`;
+        }
+
+        // Processing algorithm mechanics mapping
+        function simulateIncomingFile() {
+            const selector = document.getElementById("sim-file-type");
+            const chosenValue = selector.value;
+            
+            let targetPath = "/Downloads/";
+            let calculatedType = "pdf";
+
+            if (chosenValue.endsWith(".png")) {
+                calculatedType = "photo";
+                targetPath = chosenValue.includes("screenshot") ? "/Pictures/Screenshots/" : "/Pictures/Photos/";
+            } else if (chosenValue.endsWith(".pdf")) {
+                calculatedType = "pdf";
+                targetPath = "/Documents/PDFs/";
+            } else if (chosenValue.endsWith(".mp4")) {
+                calculatedType = "video";
+                targetPath = "/Movies/Videos/";
+            } else if (chosenValue.endsWith(".mp3")) {
+                calculatedType = "audio";
+                targetPath = "/Music/Audio/";
+            }
+
+            // Create record data instance entity
+            const newFile = { name: chosenValue, path: targetPath, type: calculatedType };
+            simulatedFiles.unshift(newFile);
+
+            // Log entry creation to app screen list view
+            const logList = document.getElementById("recent-files-list");
+            const logRow = document.createElement("div");
+            logRow.className = "file-row";
+            logRow.style.backgroundColor = "var(--md-primary-container)";
+            logRow.style.borderRadius = "8px";
+            logRow.style.padding = "8px";
+            logRow.innerHTML = `
+                <span class="material-icons-round" style="color: var(--md-on-primary-container)">auto_awesome</span>
+                <div class="file-info">
+                    <div class="file-name" style="color: var(--md-on-primary-container)">Auto-Sorted: ${chosenValue}</div>
+                    <div class="file-path" style="color: var(--md-on-primary-container)">Routed onto internal directory: ${targetPath}</div>
+                </div>
+            `;
+            logList.insertBefore(logRow, logList.firstChild);
+
+            updateUIVisuals();
+        }
+
+        // View layer swapping control module routing
+        function switchTab(targetTab) {
+            document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+            document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+
+            if (targetTab === 'home') {
+                document.getElementById("screen-home").classList.add("active");
+                document.getElementById("btn-nav-home").classList.add("active");
+                document.getElementById("app-bar-title").innerText = "Smart Vault";
+            } else if (targetTab === 'photos') {
+                document.getElementById("screen-photos").classList.add("active");
+                document.getElementById("btn-nav-photos").classList.add("active");
+                document.getElementById("app-bar-title").innerText = "Photos Sandbox";
+            } else if (targetTab === 'docs') {
+                document.getElementById("screen-docs").classList.add("active");
+                document.getElementById("btn-nav-docs").classList.add("active");
+                document.getElementById("app-bar-title").innerText = "Documents Cabinet";
+            } else if (targetTab === 'vault') {
+                document.getElementById("screen-vault").classList.add("active");
+                document.getElementById("btn-nav-vault").classList.add("active");
+                document.getElementById("app-bar-title").innerText = "Secure Storage";
+            }
+        }
+
+        // Vault state lock input execution logic blocks
+        function pressKey(num) {
+            if (enteredPin.length < 4) {
+                enteredPin += num;
+                document.getElementById(`dot-${enteredPin.length - 1}`).classList.add("active");
+            }
+            if (enteredPin.length === 4) {
+                setTimeout(() => {
+                    if (enteredPin === "1234") {
+                        document.getElementById("vault-lock-view").style.display = "none";
+                        document.getElementById("vault-unlocked-view").style.display = "block";
+                    } else {
+                        alert("Wrong PIN! Hint: check instruction subtitle label context.");
+                        clearPin();
+                    }
+                }, 200);
+            }
+        }
+
+        function clearPin() {
+            enteredPin = "";
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`dot-${i}`).classList.remove("active");
+            }
+        }
+
+        function lockVault() {
+            clearPin();
+            document.getElementById("vault-unlocked-view").style.display = "none";
+            document.getElementById("vault-lock-view").style.display = "block";
+        }
+
+        // Material 3 Dynamic Dark State Modulations Toggle
+        function toggleTheme() {
+            const htmlNode = document.documentElement;
+            const themeIcon = document.getElementById("theme-icon");
+            if (htmlNode.getAttribute("data-theme") === "dark") {
+                htmlNode.removeAttribute("data-theme");
+                themeIcon.innerText = "dark_mode";
+            } else {
+                htmlNode.setAttribute("data-theme", "dark");
+                themeIcon.innerText = "light_mode";
+            }
+        }
+
+        // Initialize state view systems automatically on mount payload execution
+        updateUIVisuals();
+    </script>
+</body>
+</html>
