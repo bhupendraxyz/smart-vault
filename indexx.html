@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrollable Video & Photo Feed</title>
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --text-color: #ffffff;
+            --accent-color: #25D366;
+            --input-bg: #1e1e1e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Phone Layout Chassis */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 860px;
+            background-color: #000;
+            border-radius: 36px;
+            border: 8px solid #222;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Top Header Navigation */
+        .app-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+        }
+
+        .app-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .upload-trigger-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Scrollable Vertical Feed Engine */
+        .feed-scroll-container {
+            flex: 1;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Hide Scrollbar */
+        }
+
+        .feed-scroll-container::-webkit-scrollbar {
+            display: none; /* Hide Chrome/Safari Scrollbar */
+        }
+
+        /* Individual Post Card Wrapper */
+        .post-card {
+            width: 100%;
+            height: 100%;
+            scroll-snap-align: start;
+            position: relative;
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Image and Video Dynamic Resizing layers */
+        .post-media-target {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .post-video {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .post-video.playing {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        /* Post Caption Overlays Descriptions */
+        .post-details-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 16px;
+            right: 80px;
+            z-index: 5;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .post-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        /* Floating Action Buttons Area Right-side */
+        .right-action-bar {
+            position: absolute;
+            right: 12px;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 5;
+        }
+
+        .action-icon-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .action-icon-group span {
+            font-size: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .action-icon-group label {
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Upload Modal Sheet Panel Overlay Popup */
+        .upload-modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            border: 1px solid #292929;
+            width: 100%;
+            border-radius: 24px;
+            padding: 20px;
+        }
+
+        .modal-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control-input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .file-selector-hidden {
+            display: none;
+        }
+
+        .custom-file-btn {
+            background-color: #2a2a2a;
+            border: 1px dashed #555;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .custom-file-btn.loaded {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .submit-post-btn {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Placeholder Feed Initial Style Setup Empty */
+        .empty-feed-placeholder {
+            text-align: center;
+            padding: 100px 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Persistent Top Header Context System Bar -->
+        <div class="app-header">
+            <h2>VibeFeed</h2>
+            <button class="upload-trigger-btn" onclick="openUploadModal()">
+                <span class="material-icons-round">add_circle</span> Upload
+            </button>
+        </div>
+
+        <!-- Scroll Feed Wrapper Context Engine -->
+        <div class="feed-scroll-container" id="main-feed-scroller" onscroll="handleFeedVideoPlaybackLogic()">
+            <!-- Initial Demo Post 1 Included inside source payload pool -->
+            <div class="post-card">
+                <!-- Attached Front Static Cover Thumbnail Image Photo -->
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500" class="post-media-target" alt="Thumbnail Cover Image">
+                <!-- Back-linked Video System Element File -->
+                <video src="https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-42013-large.mp4" class="post-media-target post-video" loop muted playsinline></video>
+                
+                <!-- Caption Text Info Metadata -->
+                <div class="post-details-overlay">
+                    <div class="post-title">@creator_prime • Cinematic Laser Abstract Note</div>
+                    <p style="font-size: 13px; color: #ccc;">स्क्रॉल करके रुकने पर यह वीडियो अपने आप प्ले हो जाएगा।</p>
+                </div>
+
+                <!-- Right Interactivity Actions Section Layout Icons -->
+                <div class="right-action-bar">
+                    <div class="action-icon-group">
+                        <span class="material-icons-round" style="color: #ff3b30;">favorite</span><label>1.2k</label>
+                    </div>
+                    <div class="action-icon-group">
+                        <span class="material-icons-round">chat_bubble</span><label>45</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Popup Component Upload Box Modal Form Sheet -->
+        <div class="upload-modal-overlay" id="upload-dialog-modal">
+            <div class="modal-card">
+                <div class="modal-title-row">
+                    <h3 style="font-size: 18px; font-weight: 600;">Create New Video Post</h3>
+                    <span class="material-icons-round" style="cursor:pointer;" onclick="closeUploadModal()">close</span>
+                </div>
+
+                <!-- Input Field: Caption -->
+                <div class="form-group">
+                    <label>Caption / Title</label>
+                    <input type="text" id="input-caption" class="form-control-input" placeholder="Enter awesome context description...">
+                </div>
+
+                <!-- File Input Layer 1: Front Thumbnail Photo Image -->
+                <div class="form-group">
+                    <label>1. Attach Front Photo (Cover Image)</label>
+                    <input type="file" id="file-photo" class="file-selector-hidden" accept="image/*" onchange="updateFileLabel('file-photo', 'label-photo')">
+                    <div class="custom-file-btn" id="label-photo" onclick="document.getElementById('file-photo').click()">
+                        <span class="material-icons-round">image</span> Select Thumbnail Photo
+                    </div>
+                </div>
+
+                <!-- File Input Layer 2: Main Connected Background Video Document File -->
+                <div class="form-group">
+                    <label>2. Attach Main Video</label>
+                    <input type="file" id="file-video" class="file-selector-hidden" accept="video/*" onchange="updateFileLabel('file-video', 'label-video')">
+                    <div class="custom-file-btn" id="label-video" onclick="document.getElementById('file-video').click()">
+                        <span class="material-icons-round">movie</span> Select Main Video File
+                    </div>
+                </div>
+
+                <button class="submit-post-btn" onclick="processAndPublishCustomPost()">Publish Onto Feed Grid</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Data Controller Scripts System Engine -->
+    <script>
+        // Modal Window View State Interchanges
+        function openUploadModal() {
+            document.getElementById("upload-dialog-modal").style.display = "flex";
+        }
+
+        function closeUploadModal() {
+            document.getElementById("upload-dialog-modal").style.display = "none";
+            // Clear Values on dismiss operation
+            document.getElementById("input-caption").value = "";
+            document.getElementById("file-photo").value = "";
+            document.getElementById("file-video").value = "";
+            document.getElementById("label-photo").className = "custom-file-btn";
+            document.getElementById("label-photo").innerHTML = '<span class="material-icons-round">image</span> Select Thumbnail Photo';
+            document.getElementById("label-video").className = "custom-file-btn";
+            document.getElementById("label-video").innerHTML = '<span class="material-icons-round">movie</span> Select Main Video File';
+        }
+
+        // Updates dynamic styling configurations when native binaries populate arrays successfully
+        function updateFileLabel(inputId, labelId) {
+            const inputRef = document.getElementById(inputId);
+            const labelRef = document.getElementById(labelId);
+            if(inputRef.files.length > 0) {
+                labelRef.classList.add("loaded");
+                labelRef.innerHTML = `<span class="material-icons-round">check_circle</span> ${inputRef.files[0].name.substring(0, 20)}...`;
+            }
+        }
+
+        // Logic framework for processing local objects into browser sandboxed blobs data pools
+        function processAndPublishCustomPost() {
+            const captionText = document.getElementById("input-caption").value || "@user_gen • Beautiful Moment";
+            const photoFile = document.getElementById("file-photo").files[0];
+            const videoFile = document.getElementById("file-video").files[0];
+
+            if(!photoFile || !videoFile) {
+                alert("कृपया फ़ीड पर अपलोड करने के लिए फोटो और वीडियो दोनों को अटैच करें!");
+                return;
+            }
+
+            // Creating localized runtime URLs points safely from buffers blobs execution instances
+            const generatedPhotoUrl = URL.createObjectURL(photoFile);
+            const generatedVideoUrl = URL.createObjectURL(videoFile);
+
+            // Dynamically structural creation architecture patterns logic blocks element definitions
+            const feedScroller = document.getElementById("main-feed-scroller");
+            const newPostCardNode = document.createElement("div");
+            newPostCardNode.className = "post-card";
+            
+            newPostCardNode.innerHTML = `
+                <img src="${generatedPhotoUrl}" class="post-media-target" alt="User Uploaded Cover">
+                <video src="${generatedVideoUrl}" class="post-media-target post-video" loop muted playsinline></video>
+                
+                <div class="post-details-overlay">
+                    <div class="post-title">${captionText}</div>
+                    <p style="font-size: 13px; color: #eee;">Uploaded Just Now • Double Binary Post Stack</p>
+                </div>
+
+                <div class="right-action-bar">
+                    <div class="action-icon-group">
+                        <span class="material-icons-round" onclick="this.style.color='#ff3b30'">favorite_border</span><label>0</label>
+                    </div>
+                    <div class="action-icon-group">
+                        <span class="material-icons-round">chat_bubble_outline</span><label>0</label>
+                    </div>
+                </div>
+            `;
+
+            // Insert new content layout structure element block directly context on top element array index
+            feedScroller.insertBefore(newPostCardNode, feedScroller.firstChild);
+            
+            closeUploadModal();
+            // Scroll system index point anchor focusing directly automatically back up top execution index
+            feedScroller.scrollTop = 0;
+            
+            // Re-trigger playback evaluations context immediately inside container wrappers
+            setTimeout(handleFeedVideoPlaybackLogic, 300);
+        }
+
+        // Intersection Detection Simulator Logic tracking scroll bounds positioning loops metrics
+        function handleFeedVideoPlaybackLogic() {
+            const scroller = document.getElementById("main-feed-scroller");
+            const posts = scroller.querySelectorAll(".post-card");
+            const scrollerBoundsHeight = scroller.clientHeight;
+
+            posts.forEach(post => {
+                const positionYOffset = post.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+                const videoElement = post.querySelector("video");
+
+                // Check condition parameter matching boundaries if block is explicitly filling central viewport grid fully
+                if (Math.abs(positionYOffset) < scrollerBoundsHeight / 2) {
+                    if (videoElement && videoElement.paused) {
+                        videoElement.classList.add("playing");
+                        videoElement.play().catch(err => console.log("Autoplay caught protection criteria block:", err));
+                    }
+                } else {
+                    if (videoElement && !videoElement.paused) {
+                        videoElement.classList.remove("playing");
+                        videoElement.pause();
+                        videoElement.currentTime = 0; // Rewind back setup automatically on defocus event tracking
+                    }
+                }
+            });
+        }
+
+        // Run initial execution check frames immediately during screen rendering phase setup loops
+        window.addEventListener("load", () => {
+            setTimeout(handleFeedVideoPlaybackLogic, 500);
+        });
+    </script>
+</body>
+</html>
